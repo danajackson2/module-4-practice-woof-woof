@@ -7,19 +7,14 @@ import Dog from './Dog'
 class App extends React.Component {
   state={
     allDogs: [],
-    dogs: [],
     selectedDog: {},
     filterOn: false
   }
 
-  getAllDogs = () => {
+  componentDidMount(){
     fetch('http://localhost:3000/pups')
     .then(res => res.json())
-    .then(data => this.setState({allDogs: data, dogs:data}))
-  }
-
-  componentDidMount(){
-    this.getAllDogs()
+    .then(data => this.setState({allDogs: data}))
   }
 
   setDog = (dog) => {
@@ -31,31 +26,37 @@ class App extends React.Component {
     })
     .then(res => res.json())
     .then(dog => {
-      this.renderDog(dog)
-      this.getAllDogs()
+      this.updateDog(dog)
     })
+  }
+
+  updateDog = (dog) => {
+    this.setState( prevState => {
+      let findDog = prevState.allDogs.find(d => d.id === dog.id)
+      findDog.isGoodDog = !findDog.isGoodDog
+      return {
+        allDogs: prevState.allDogs
+      }})
   }
 
   renderDog = (dog) => {
     this.setState({selectedDog: dog})
   }
 
-  filterDogs = () => {
-    let newBoolean = !this.state.filterOn
-    if (newBoolean) {
-      let newDogList = this.state.allDogs.filter(d => d.isGoodDog === true)
-      this.setState({dogs: newDogList, filterOn: newBoolean})
-    } else {
-      this.setState({dogs: this.state.allDogs, filterOn: newBoolean})
-    }
+  filteredDogs = () => {
+    return this.state.filterOn ? this.state.allDogs.filter(d => d.isGoodDog === true) : this.state.allDogs
+  }
 
+  filterDogs = () => {    
+    let newBoolean = !this.state.filterOn
+    this.setState({filterOn: newBoolean})
   }
 
   render(){
     return (
       <div className="App">
         <DogFilterButton filterOn={this.state.filterOn} filterDogs={this.filterDogs}/>
-        <DogBar dogs={this.state.dogs} renderDog={this.renderDog}/>
+        <DogBar dogs={this.filteredDogs()} renderDog={this.renderDog}/>
         <Dog dog={this.state.selectedDog} setDog={this.setDog}/>
       </div>
     );
